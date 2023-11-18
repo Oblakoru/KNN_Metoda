@@ -22,7 +22,7 @@ test = df.drop(train.index)
 
 mojKlasifikator.fit(train)
 
-mojKlasifikator.predictBasic(test)
+mojKlasifikator.navzkriznaValidacija()
 
 
 

@@ -95,37 +95,80 @@ class Klasifikator():
         testnaMnozica[f"predikcija"] = oceneList
         testnaMnozica.to_csv("data/klasifikacija.csv", index=False)
 
-    ##Testiranje
-    def test(self):
-        df = pd.read_csv('data/klasifikacija.csv')
+    def predictZaNavzkrizno(self, testnaMnozica, ucnaMnozica, steviloSosedov, nacinIzracuna):
 
-        y_true = df['species']
-        y_pred = df['predikcija']
+        oceneList = []
+
+        for rowTest in testnaMnozica.values:
+            razdalje = []
+            if nacinIzracuna == "evklidska":
+                for row in ucnaMnozica.values:
+                    distance = math.dist(rowTest[:-1], row[:-1])
+                    razdalje.append(distance)
+            else:
+                for row in ucnaMnozica.values:
+                    distance = cityblock(row[:-1], rowTest[:-1])
+                    razdalje.append(distance)
+
+            # Naredim kopijo, da se ne spreminja originalni df
+            dfRazdalje = ucnaMnozica.copy()
+
+            # Dodam stolpec z razdaljami
+            dfRazdalje["Razdalja"] = razdalje
+
+            # Sortiram po razdalji in vzamem prvih x
+            ocene = dfRazdalje.sort_values(by="Razdalja", inplace=False).head(steviloSosedov)["species"]
+
+            #print(f"Klasificiran kot: {ocene.value_counts().idxmax()}, dejansko: {rowTest[-1]}")
+
+            # Dodam v seznam, kjer so vsi rezultati
+            oceneList.append(ocene.value_counts().idxmax())
+
+        testnaMnozica["predikcija"] = oceneList
+
+        return testnaMnozica
+
+        #testnaMnozica.to_csv("data/klasifikacija.csv", index=False)
+
+    ##Testiranje
+    def test(self, data):
+
+        #df = pd.read_csv('data/klasifikacija.csv')
+
+        y_true = data['species']
+        y_pred = data['predikcija']
 
         accuracy = accuracy_score(y_true, y_pred)
-        print(f'Accuracy: {accuracy:.2f}')
+        #print(f'Accuracy: {accuracy:.2f}')
 
-        #conf_matrix = confusion_matrix(y_true, y_pred)
-        #print('Confusion Matrix:')
-        #print(conf_matrix)
-        #
-        #class_report = classification_report(y_true, y_pred)
-        #print('Classification Report:')
-        #print(class_report)
+        return accuracy
+
 
     def navzkriznaValidacija(self):
 
         folder_path = "data/cross_validation"  # Change this to the path of your folder
         files = os.listdir(folder_path)
 
-        for i in range(len(files)):
-            testniPodatek = files[i]
-            ucniPodatek = [f for j, f in enumerate(files) if j != i]
+        for type in ["evklidska", "manhattan"]:
 
-            testniPodatekDF = pd.read_csv(f"data/cross_validation/{testniPodatek}")
-            ucniPodatekDF = pd.concat((pd.read_csv(f"data/cross_validation/{f}") for f in ucniPodatek),
-                                      ignore_index=True)
+            for x in [1, 2, 3, 4, 5, 6, 7, 8]:
 
+                skupenAccuracy = []
+
+                for i in range(len(files)):
+
+                    testniPodatek = files[i]
+                    ucniPodatek = [f for j, f in enumerate(files) if j != i]
+
+                    testniPodatekDF = pd.read_csv(f"data/cross_validation/{testniPodatek}")
+                    ucniPodatekDF = pd.concat((pd.read_csv(f"data/cross_validation/{f}") for f in ucniPodatek),
+                                              ignore_index=True)
+
+                    zaAccuracy = self.predictZaNavzkrizno(testniPodatekDF, ucniPodatekDF, x, type)
+                    #print(self.test(zaAccuracy))
+                    skupenAccuracy.append(self.test(zaAccuracy))
+
+                print(f"Skupen accuracy za stevilo sosedov {x} z {type} razdaljo: {sum(skupenAccuracy) / len(skupenAccuracy)}")
 
 
 
