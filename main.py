@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
@@ -26,35 +28,23 @@ mojKlasifikator.predictBasic(test)
 
 #####Cross validation
 
-#Premešam podatke v df
-pomesaniPodatki = df.sample(frac=1, random_state=200)
-
-steviloDelov = 10
-
-razdeljeniPodatki = np.array_split(pomesaniPodatki, steviloDelov)
-
-# Display each part
-for i, part in enumerate(razdeljeniPodatki):
-    part.to_csv(f"data/cross_validation/part{i}.csv", index=False)
 
 
-##Testiranje
-def test():
-    df = pd.read_csv('data/klasifikacija.csv')
+def razdeliNaDele():
+    #Premešam podatke v df
+    pomesaniPodatki = df.sample(frac=1, random_state=200)
 
-    y_true = df['species']
-    y_pred = df['predikcija']
+    steviloDelov = 10
 
-    accuracy = accuracy_score(y_true, y_pred)
-    print(f'Accuracy: {accuracy:.2f}')
+    razdeljeniPodatki = np.array_split(pomesaniPodatki, steviloDelov)
 
-    conf_matrix = confusion_matrix(y_true, y_pred)
-    print('Confusion Matrix:')
-    print(conf_matrix)
+    # Display each part
+    for i, part in enumerate(razdeljeniPodatki):
+        part.to_csv(f"data/cross_validation/part{i}.csv", index=False)
 
-    class_report = classification_report(y_true, y_pred)
-    print('Classification Report:')
-    print(class_report)
+
+
+
 
 
 
