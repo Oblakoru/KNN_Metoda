@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 from Klasifikator import Klasifikator
 
 def razdeliNaDele():
+
     #Premešam podatke v df
     pomesaniPodatki = df.sample(frac=1, random_state=200)
 
@@ -16,8 +17,8 @@ def razdeliNaDele():
     for i, part in enumerate(razdeljeniPodatki):
         part.to_csv(f"data/cross_validation/part{i}.csv", index=False)
 
-
 def navzkriznaValidacija(mojKlasifikator):
+
     folder_path = "data/cross_validation"
     files = os.listdir(folder_path)
 
@@ -47,6 +48,7 @@ def navzkriznaValidacija(mojKlasifikator):
                 ucniPodatekDF = pd.concat((pd.read_csv(f"data/cross_validation/{f}") for f in ucniPodatek),
                                           ignore_index=True)
 
+
                 mojKlasifikator.fit(ucniPodatekDF)
                 mojKlasifikator.steviloSosedov = steviloSosedov
                 mojKlasifikator.nacinIzracuna = type
@@ -55,10 +57,7 @@ def navzkriznaValidacija(mojKlasifikator):
 
                 skupenAccuracy.append(mojKlasifikator.test(zaAccuracy))
 
-
-                ###### Z normalizacijo
-
-
+                ###### Za normalizacijo
                 for column in ucniPodatekDF.columns:
                     if column != "species":
                         ucniPodatekDF[column] = (ucniPodatekDF[column] - ucniPodatekDF[column].min()) / (
@@ -128,16 +127,16 @@ mojKlasifikator = Klasifikator(5, 'evklidska')
 train = df.sample(frac=0.8, random_state=500)
 test = df.drop(train.index)
 
-#test.to_csv("data/test.csv", index=False)
 
+#test.to_csv("data/test.csv", index=False)
 mojKlasifikator.fit(train)
 
 testna = mojKlasifikator.predictBasic(test)
+testna.to_csv("data/klasificiran.csv", index=False)
 
 mojKlasifikator.test(testna)
 
 ### Precna validacija
-
 navzkriznaValidacija(mojKlasifikator)
 
 

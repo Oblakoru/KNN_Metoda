@@ -45,6 +45,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/data/cross_validation/part5.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/data/cross_validation/part6.csv">
           <value>
             <Attribute>
@@ -67,6 +74,13 @@
           </value>
         </entry>
         <entry key="/data/cross_validation/part9.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/data/klasificiran.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
