@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from scipy.spatial.distance import cityblock
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import random
 
 
 class Klasifikator:
@@ -32,7 +33,7 @@ class Klasifikator:
     # Predikcija za testno množico
     def predictBasic(self, testnaMnozica):
 
-        # List za shranjevanje predikcij
+        # List za shranjevanje predikcij - vrsta rastline
         predikcijeList = []
 
         # Sprehod skozi vse vrstice v testni množici
@@ -41,6 +42,7 @@ class Klasifikator:
             # List za shranjevanje razdalj
             razdalje = []
 
+            # ZA vsako vrsto v učni množici izračunam razdaljo do testne instance
             if self.nacinIzracuna == "evklidska":
                 for row in self.df_ucna_mnozica.values:
                     distance = math.dist(rowTest[:-1], row[:-1])
@@ -60,12 +62,37 @@ class Klasifikator:
             ocene = dfUcnaRazdalje.sort_values(by="Razdalja", ascending=True, inplace=False).head(self.steviloSosedov)[
                 "species"]
 
-            #print(f"Klasificiran kot: {ocene.value_counts().idxmax()}, dejansko: {rowTest[-1]}")
+            # #Damo v dictionary
+            # oceneDictionary = (ocene.value_counts().to_dict())
+            #
+            # #Pregledamo, koliko je max ponavljanje elementov
+            # max_occurrences = max(oceneDictionary.values())
+            #
+            # # Najdemo vse elemente, ko se največkrat ponavlajo
+            # max_occurrence_names = [name for name, count in oceneDictionary.items() if count == max_occurrences]
+            #
+            # #print(max_occurrence_names)
+            #
+            # #Preverimo, če jih je več
+            # if len(max_occurrence_names) > 1:
+            #     # Zbere eno random, če jih je več z isto vrednostjo
+            #     print(max_occurrence_names)
+            #     print(oceneDictionary)
+            #     print(ocene)
+            #     print(f"Več enakih pri {self.steviloSosedov} - sledi random zbiranje")
+            #     ocena = random.choice(max_occurrence_names)
+            #     print("Izbrana ocena: " + ocena)
+            #     predikcijeList.append(ocena)
+            #     #print(f"Klasificiran kot: {ocena}, dejansko: {rowTest[-1]}")
+            # else:
+            #     predikcijeList.append(max_occurrence_names[0])
+            #     #print(f"Klasificiran kot: {max_occurrence_names[0]}, dejansko: {rowTest[-1]}")
 
             # Dodam v seznam, kjer so vsi rezultati
             predikcijeList.append(ocene.value_counts().idxmax())
 
         testnaMnozica["predikcija"] = predikcijeList
+        #print(self.test(testnaMnozica))
 
         return testnaMnozica
 

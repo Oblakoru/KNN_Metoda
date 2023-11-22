@@ -87,13 +87,6 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="/data/klasifikacija.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="/data/navzkriznaValidacija.csv">
           <value>
             <Attribute>

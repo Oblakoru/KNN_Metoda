@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from Klasifikator import Klasifikator
 
-def razdeliNaDele():
+def razdeliNaDele(df):
 
     #Premešam podatke v df
-    pomesaniPodatki = df.sample(frac=1, random_state=200)
+    pomesaniPodatki = df.sample(frac=1, random_state=250)
 
     steviloDelov = 10
 
@@ -17,8 +17,27 @@ def razdeliNaDele():
     for i, part in enumerate(razdeljeniPodatki):
         part.to_csv(f"data/cross_validation/part{i}.csv", index=False)
 
-def navzkriznaValidacija(mojKlasifikator):
 
+def ustvariGraf(dataframe, vrsta):
+    for nacin, group in dataframe.groupby('nacin'):
+        plt.plot(group['steviloSosedov'], group['accuracy'], marker='o', linestyle='-', label=nacin)
+    plt.xlabel('Stevilo Sosedov')
+    plt.ylabel('Accuracy')
+    plt.title(f'Accuracy/Stevilo Sosedov za Nacin + {vrsta}')
+    plt.legend()
+    plt.show()
+def dataframeToCSV(dataframe, csvSosedje, csvNacin, csvAccuracy, tip):
+        dataframe["steviloSosedov"] = csvSosedje
+        dataframe["nacin"] = csvNacin
+        dataframe["accuracy"] = csvAccuracy
+        dataframe.to_csv(f"data/navzkriznaValidacija{tip}.csv", index=False)
+
+def navzkriznaValidacija(mojKlasifikator, df):
+
+    #Razdelimo na dele
+    razdeliNaDele(df)
+
+    #Shranimo vse dele v list
     folder_path = "data/cross_validation"
     files = os.listdir(folder_path)
 
@@ -32,8 +51,10 @@ def navzkriznaValidacija(mojKlasifikator):
     csvNacinNorm = []
     csvAccuracyNorm = []
 
+    #Gremo skoz vsaki tip
     for type in ["evklidska", "manhattan"]:
 
+        #Gremo skoz vsako stevilo sosedov
         for steviloSosedov in [1, 2, 3, 4, 5, 6, 7, 8]:
 
             skupenAccuracy = []
@@ -57,7 +78,7 @@ def navzkriznaValidacija(mojKlasifikator):
 
                 skupenAccuracy.append(mojKlasifikator.test(zaAccuracy))
 
-                ###### Za normalizacijo
+                ############### Za normalizacijo
                 for column in ucniPodatekDF.columns:
                     if column != "species":
                         ucniPodatekDF[column] = (ucniPodatekDF[column] - ucniPodatekDF[column].min()) / (
@@ -75,6 +96,16 @@ def navzkriznaValidacija(mojKlasifikator):
 
                 skupenAccuracyNorm.append(mojKlasifikator.test(zaAccuracy))
 
+            def povprecniAccuracy(skupenAccuracy, csvSosedje, csvNacin, type):
+                print(
+                    f"Skupen accuracy za stevilo sosedov {steviloSosedov} z {type} razdaljo: {sum(skupenAccuracy) / len(skupenAccuracy)}")
+                csvSosedje.append(steviloSosedov)
+                csvNacin.append(type)
+                csvAccuracy.append(sum(skupenAccuracy) / len(skupenAccuracy))
+
+
+            #povprecniAccuracy(skupenAccuracy, csvSosedje, csvNacin, type)
+            #povprecniAccuracy(skupenAccuracyNorm, csvSosedjeNorm, csvNacinNorm, type)
 
             print(f"Skupen accuracy za stevilo sosedov {steviloSosedov} z {type} razdaljo: {sum(skupenAccuracy) / len(skupenAccuracy)}")
             csvSosedje.append(steviloSosedov)
@@ -87,46 +118,27 @@ def navzkriznaValidacija(mojKlasifikator):
             csvAccuracyNorm.append(sum(skupenAccuracyNorm) / len(skupenAccuracyNorm))
 
 
-    csvDataframe["steviloSosedov"] = csvSosedje
-    csvDataframe["nacin"] = csvNacin
-    csvDataframe["accuracy"] = csvAccuracy
-    csvDataframe.to_csv("data/navzkriznaValidacija.csv", index=False)
 
-    csvDataframeNorm["steviloSosedov"] = csvSosedjeNorm
-    csvDataframeNorm["nacin"] = csvNacinNorm
-    csvDataframeNorm["accuracy"] = csvAccuracyNorm
-    csvDataframeNorm.to_csv("data/navzkriznaValidacijaNorm.csv", index=False)
 
-    # Group by 'nacin' and plot each group separately
-    for nacin, group in csvDataframe.groupby('nacin'):
-        plt.plot(group['steviloSosedov'], group['accuracy'], marker='o', linestyle='-', label=nacin)
+    #Shranimo v csv
+    dataframeToCSV(csvDataframe, csvSosedje, csvNacin, csvAccuracy, "basic")
+    dataframeToCSV(csvDataframeNorm, csvSosedjeNorm, csvNacinNorm, csvAccuracyNorm, "normalizacija")
 
-    plt.xlabel('Stevilo Sosedov')
-    plt.ylabel('Accuracy')
-    plt.title('Accuracy/Stevilo Sosedov za Nacin')
-    plt.legend()
-    plt.show()
-
-    for nacin, group in csvDataframeNorm.groupby('nacin'):
-        plt.plot(group['steviloSosedov'], group['accuracy'], marker='o', linestyle='-', label=nacin)
-
-    plt.xlabel('Stevilo Sosedov')
-    plt.ylabel('Accuracy')
-    plt.title('Accuracy/Stevilo Sosedov za Nacin + Normalizacija')
-    plt.legend()
-    plt.show()
+    #Ustvarimo grafe
+    ustvariGraf(csvDataframe, "brez normalizacije")
+    ustvariGraf(csvDataframeNorm, "normalizacija")
 
 
 #Preberemo podatke ter jih shranimo v df
 df = pd.read_csv('data/IRIS.csv')
 
 #Ustvarimo razred za klasifikacijo
-mojKlasifikator = Klasifikator(5, 'evklidska')
+mojKlasifikator = Klasifikator(5, 'manhattan')
 
 #Razdelitev na testno in učno množico, Random state je seed
-train = df.sample(frac=0.8, random_state=500)
-test = df.drop(train.index)
+train = df.sample(frac=0.8, random_state=200)
 
+test = df.drop(train.index)
 
 #test.to_csv("data/test.csv", index=False)
 mojKlasifikator.fit(train)
@@ -134,10 +146,10 @@ mojKlasifikator.fit(train)
 testna = mojKlasifikator.predictBasic(test)
 testna.to_csv("data/klasificiran.csv", index=False)
 
-mojKlasifikator.test(testna)
+print(f"Točnost te množice je: {mojKlasifikator.test(testna)} ")
 
 ### Precna validacija
-navzkriznaValidacija(mojKlasifikator)
+navzkriznaValidacija(mojKlasifikator, df)
 
 
 
